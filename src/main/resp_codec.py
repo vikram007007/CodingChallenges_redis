@@ -8,6 +8,9 @@ class SimpleString:
 
 class RESPCodec:
 
+    OK_RESPONSE = b"+OK\r\n"
+    NULL_RESPONSE = b"$-1\r\n"
+
     @staticmethod
     async def decode(reader: asyncio.StreamReader) -> Any:
 
@@ -68,13 +71,15 @@ class RESPCodec:
         """
 
         if isinstance(value, SimpleString):
+            if value.value == "OK":
+                return RESPCodec.OK_RESPONSE
             return f"+{value.value}\r\n".encode()
         elif isinstance(value, str):
             return f"${len(value)}\r\n{value}\r\n".encode()
         elif isinstance(value, int):
             return f":{value}\r\n".encode()
         elif value is None:
-            return b"$-1\r\n"
+            return RESPCodec.NULL_RESPONSE
         elif isinstance(value, list):
             result = bytearray()
             result.extend(f"*{len(value)}\r\n".encode())
